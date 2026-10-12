@@ -1,0 +1,123 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>text sheet</title></head>
+<body style="margin:0;background:#222">
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="deva.js"></script>
+<script src="text.js"></script>
+<script src="strings.js"></script>
+<script>
+const S = window.REEL_STRINGS;
+function allStrings() {
+  const out = [];
+  for (const [k, v] of Object.entries(S)) (Array.isArray(v) ? v : [v]).forEach(s => out.push([k, s]));
+  return out;
+}
+function sheetBg(ctx, title) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#fbf6ec'; ctx.fillRect(0, 0, 1080, 1920);
+  ctx.fillStyle = '#8a7a66'; ctx.font = '700 26px "Noto Sans"';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(title + '   [backend: ' + Text.backend + (Text.fontFile ? ' ' + Text.fontFile : '') + ']', 40, 50);
+}
+function label(ctx, s, x, y) {
+  ctx.fillStyle = '#b0a08c'; ctx.font = '600 20px "Noto Sans"'; ctx.textAlign = 'left';
+  ctx.fillText(s, x, y);
+}
+// Sheet with every string at subtitle size; returns list of pages (dataURLs)
+function subtitlePages(ctx) {
+  const pages = [];
+  const items = allStrings();
+  const size = 66, lh = Text.lineHeight(size);
+  let y = 110, page = 1;
+  sheetBg(ctx, 'TEXT SHEET ' + page + ' - every reel string at subtitle size (' + size + 'px)');
+  for (const [k, s] of items) {
+    const lines = Text.wrap(s, size, 1000);
+    const need = 30 + lines.length * lh + 34;
+    if (y + need > 1880) { pages.push(c.toDataURL('image/png')); page++; y = 110; sheetBg(ctx, 'TEXT SHEET ' + page + ' - every reel string at subtitle size (' + size + 'px)'); }
+    label(ctx, k, 40, y + 4);
+    y += 22;
+    for (const l of lines) { Text.draw(ctx, l, 40, y + 20, size, { fill: '#2b1a10' }); y += lh; }
+    y += 34;
+  }
+  pages.push(c.toDataURL('image/png'));
+  return pages;
+}
+function titlePage(ctx) {
+  sheetBg(ctx, 'TITLE SIZES (outlined / on dark)');
+  ctx.fillStyle = '#7a1414'; ctx.fillRect(0, 80, 1080, 560);
+  Text.draw(ctx, S.brand, 540, 140, 230, { fill: '#fff', align: 'center' });
+  Text.draw(ctx, S.product, 540, 430, 170, { fill: '#f6c56b', align: 'center' });
+  Text.draw(ctx, S.tagline, 540, 720, 110, { fill: '#5a2d0c', align: 'center' });
+  Text.draw(ctx, S.offer, 540, 900, 110, { fill: '#fff', stroke: '#b3121b', strokeWidth: 14, align: 'center' });
+  Text.draw(ctx, S.mrp, 540, 1080, 90, { fill: '#5a2d0c', align: 'center' });
+  Text.draw(ctx, S.weight, 540, 1220, 100, { fill: '#2b1a10', align: 'center' });
+  Text.draw(ctx, S.cta, 540, 1370, 120, { fill: '#ffd34d', stroke: '#2b1a10', strokeWidth: 12, align: 'center' });
+  Text.draw(ctx, S.end, 540, 1560, 80, { fill: '#b3121b', align: 'center' });
+  Text.draw(ctx, S.hook, 540, 1700, 80, { fill: '#2b1a10', align: 'center' });
+  return c.toDataURL('image/png');
+}
+function zoomPage(ctx) {
+  sheetBg(ctx, 'ZOOM CHECK');
+  Text.draw(ctx, 'मार्तंड', 540, 160, 340, { fill: '#2b1a10', align: 'center' });
+  Text.draw(ctx, 'अस्सल', 540, 620, 300, { fill: '#2b1a10', align: 'center' });
+  Text.draw(ctx, 'प्रवासात', 540, 1060, 220, { fill: '#2b1a10', align: 'center' });
+  Text.draw(ctx, 'पाहुण्यांसाठी', 540, 1420, 150, { fill: '#2b1a10', align: 'center' });
+  Text.draw(ctx, 'ग्रॅम तुझ्यासाठी', 540, 1680, 130, { fill: '#2b1a10', align: 'center' });
+  return c.toDataURL('image/png');
+}
+// priority words at title size (left) and subtitle size (below each)
+function priorityPage(ctx) {
+  sheetBg(ctx, 'PRIORITY WORDS (title 110px / subtitle 56px)');
+  const words = ['मार्तंड फरसाण', 'अस्सल गावाकडची चव', 'आजच मागवा!', 'हळू खा रे!', 'आता फक्त ₹१००',
+    '५०० ग्रॅम', 'येळकोट येळकोट… जय मल्हार!', 'हा आवाज ओळखीचा वाटतोय?', 'स ल ळ श  र ड ट ण च ज ह'];
+  let y = 110;
+  for (const w of words) {
+    Text.draw(ctx, w, 40, y + 40, 110, { fill: '#2b1a10' });
+    Text.draw(ctx, w, 40, y + 150, 56, { fill: '#2b1a10' });
+    y += 200;
+  }
+  return c.toDataURL('image/png');
+}
+// development aid: every glyph alone with its code point
+function glyphPage(ctx) {
+  sheetBg(ctx, 'GLYPH INVENTORY');
+  const cons = 'कखगघङचछजझञटठडढणतथदधनपफबभमयरलळवशषसह';
+  const vow = 'अआइईउऊएऐओऔऑ';
+  const dig = '०१२३४५६७८९₹';
+  const list = [...cons, ...vow, ...dig];
+  const size = 120, cols = 7, cw = 150, rh = 190;
+  list.forEach((ch, i) => {
+    const x = 30 + (i % cols) * cw, y = 110 + Math.floor(i / cols) * rh;
+    Text.draw(ctx, ch, x + 10, y + 40, size, { fill: '#2b1a10' });
+    label(ctx, 'U+' + ch.codePointAt(0).toString(16).toUpperCase(), x + 10, y + 180);
+  });
+  return c.toDataURL('image/png');
+}
+function matraPage(ctx) {
+  sheetBg(ctx, 'MATRAS + CONJUNCTS');
+  const rows = [
+    'का कि की कु कू कृ के कै को कौ कं कॅ कॉ',
+    'मि ति सि नि हि टि डि रु रू',
+    'स्स ण्य त्य च्य ध्य ब्य ल्ह क्त',
+    'ह्य झ्य प्र ग्र र्त र्तं र्मा र्की',
+    'व्व ल्य ष्ट द्य ट्र',
+  ];
+  rows.forEach((r, i) => Text.draw(ctx, r, 40, 160 + i * 330, 120, { fill: '#2b1a10' }));
+  return c.toDataURL('image/png');
+}
+window.renderSheets = async function () {
+  await Text.init();
+  const ctx = c.getContext('2d');
+  const all = allStrings().map(x => x[1]).join(' ');
+  const missing = window.Deva.covers(all);
+  const out = { backend: Text.backend, missing, pages: {} };
+  subtitlePages(ctx).forEach((p, i) => out.pages['text_sheet_' + (i + 1)] = p);
+  out.pages['text_sheet_titles'] = titlePage(ctx);
+  out.pages['text_sheet_zoom'] = zoomPage(ctx);
+  out.pages['text_sheet_priority'] = priorityPage(ctx);
+  out.pages['text_sheet_glyphs'] = glyphPage(ctx);
+  out.pages['text_sheet_matras'] = matraPage(ctx);
+  return out;
+};
+</script>
+</body></html>
